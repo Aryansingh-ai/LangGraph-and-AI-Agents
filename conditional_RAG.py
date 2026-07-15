@@ -1,4 +1,5 @@
 import os 
+import sys
 from typing import TypedDict, Annotated
 from langgraph.graph.message import add_messages 
 from langgraph.graph import StateGraph , START , END 
@@ -11,6 +12,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+if sys.prefix == sys.base_prefix:
+    raise SystemExit(
+        "Run this script with the project virtual environment: .\\.venv\\Scripts\\python.exe conditional_RAG.py"
+    )
+
 
 #Step 1 - Building the RAG retrievers 
 
@@ -21,9 +27,9 @@ def build_retriver(pdf_path : str):
     document = loader.load()
 
     splitter = RecursiveCharacterTextSplitter(chunk_size = 800, 
-                                              chunk_overlap = 100)
+                                              chunk_overlap = 100) # overlap is used to maintain context between chunks
     
-    chunks = splitter.split_documents(document)
+    chunks = splitter.split_documents(document) 
 
     vectorstore = FAISS.from_documents(chunks,embeddings)
 
@@ -72,8 +78,17 @@ def classifier_node(state : State) -> dict:
     else:
         category = "general"
     
-    return {"query_type" : category}
+    return {"query_type" : category}  # ye btayega ki query kis type ki hai usi se hum next node ko route karenge
 
+
+
+
+# flowchart of the RAG pipeline:
+# START -> classifier_node -> [academic_rag_node, fee_rag_node, general_node] -> response_node -> END
+
+
+
+# this node will be used to retrieve relevant chunks from the academic handbook based on the user's query.
 def academic_rag_node(state: State) -> dict:
     """Retrieves relevant chunks from the academics handbook."""
     query = state["messages"][-1].content
@@ -81,6 +96,7 @@ def academic_rag_node(state: State) -> dict:
     context = "\n\n".join([doc.page_content for doc in docs])
     return {"retrieved_context": context}
 
+# this node will be used to retrieve relevant chunks from the fee structure PDF based on the user's query.
 def fee_rag_node(state: State) -> dict:
     """Retrieves relevant chunks from the fee structure PDF."""
     query = state["messages"][-1].content
@@ -88,7 +104,7 @@ def fee_rag_node(state: State) -> dict:
     context = "\n\n".join([doc.page_content for doc in docs])
     return {"retrieved_context": context}
 
-
+# this node will be used to answer queries that don't require retrieval. 
 def general_node(state: State) -> dict:
     """Answers directly using the LLM's own knowledge, no retrieval needed."""
     return {"retrieved_context": "NO_RETRIEVAL_NEEDED"}
