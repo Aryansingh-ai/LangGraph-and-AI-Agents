@@ -7,6 +7,12 @@ from langgraph.graph import StateGraph, START , END
 load_dotenv()
 
 llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.1)
+
+
+# reducers is used to merge the outputs of multiple nodes into a single state key.
+# it also avoid the overwriting of the state key by merging the outputs of multiple nodes into a single state key.
+
+
 def merge_score_dicts(existing :dict , newupdate : dict) -> dict:
     if existing is None:
         return newupdate 
