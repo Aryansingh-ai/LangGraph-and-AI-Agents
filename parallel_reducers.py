@@ -1,4 +1,4 @@
-import os 
+import os  # used to load environment variables
 from typing import TypedDict, Annotated
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq

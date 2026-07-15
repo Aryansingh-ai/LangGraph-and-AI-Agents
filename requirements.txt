@@ -1,4 +1,11 @@
-langchain
 langgraph
+langchain
 langchain-groq
 python-dotenv
+
+langchain-community
+langchain-text-splitters
+langchain-huggingface
+sentence-transformers
+faiss-cpu # used for vector search and retrieval
+pypdf
